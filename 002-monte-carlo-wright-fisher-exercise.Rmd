@@ -137,5 +137,9 @@ $$
 Use the results from the simulated W-F population in exercise #1 to approximate the
 heterozygosity at generations 1--20.
 1. Simulate 1,000 replicates of a haploid population of size 100 for 1,000 generations,
-with $X_0 = 30$, and from the output, approximate (via histogram) the distribution of time until fixation
+with $X_0 = 30$, and, from the output, approximate (via histogram) the distribution of time until fixation
 (i.e., the first generation $t$, at which $X_t = 0$ or $X_t = 100$.)
+
+When doing MCMC you might often work like this: a large number of variable states get
+written to disk or stored in a variable, and then after the fact you can use them in
+Monte Carlo.
