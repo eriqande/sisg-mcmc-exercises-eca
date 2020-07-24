@@ -1,0 +1,64 @@
+---
+title: "Bonus excercise: use Monte Carlo to approximate a definite integral"
+output: html_notebook
+---
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(plotly)
+```
+
+
+Consider a somewhat nasty-looking curve in two dimensions.  We
+define $z$ to be a function of $x$ and $y$ that looks like this: 
+$$
+z = f(x, y) = \biggl[1 + e ^{-|x + 2y|} \cos\biggl(0.2 \sqrt{x^2 + y^2}\biggr) \biggr] \times \mathbb{I}\{-10 < x,y < 10 \}
+$$
+In other words, it is a function that returns 0 everywhere outside of a square
+of width 20, centered on the origin.  But within that square it returns
+positive values.
+
+Here is some code that defines it:
+```{r}
+ugly <- function(x, y) {
+  ifelse(x < -10 | y > 10 | x > 10 | y < -10, 
+         0,
+         1 + exp(-abs(x + 2 * y) / 10) * cos(0.2 * sqrt(x^2 * y^2))
+  )
+}
+```
+
+And, we can use that to visualize the surface by evaluating a lot of points and
+plotting it with the plotly package.  Go ahead and rotate and manipulate the thing.
+```{r, fig.width=8}
+vals <- seq(-12, 12, by = 0.05)
+pts <- expand_grid(
+  x = vals,
+  y = vals
+) %>%
+  mutate(z = ugly(x, y))
+
+zmat <- matrix(pts$z, ncol = length(vals), nrow = length(vals))
+
+plot_ly(x = vals, y = vals, z = ~zmat) %>%
+  add_surface()
+```
+
+
+The volume under that curve is given by the definite integral:
+$$
+\int_{-10}^{10} \int_{-10}^{10} f(x, y) dxdy = \int_{-10}^{10} \int_{-10}^{10} \biggl[1 + e ^{-|x + 2y|} \cos\biggl(0.2 \sqrt{x^2 + y^2}\biggr) \biggr] dxdy
+$$
+That looks a little hairy.  It may have an analytical solution, or it could
+be evaluated numerically with high accuracy.  But, if you
+rewrite that integral as an expection over a two-dimensional uniform variable on the square from -10 to 10 in $x$ and also from -10 to 10 in $y$, then you get:
+$$
+20 \times 20 \times \int_{-10}^{10} \int_{-10}^{10} f(x, y) \frac{1}{20}\frac{1}{20}dxdy =
+400 \times \mathbb{E}[f(x, y)]
+$$
+where the expectation is taken over a 2-D uniform variable from -10 to 10 in both x and y.
+
+Given that as a preamble, your mission it to approximate that integral using Monte Carlo sampling.
+
+Good luck!  The answer is $\approx 423.7$.

@@ -1,0 +1,64 @@
+---
+title: "Monte Carlo Sampling from a Beta-Distribution Posterior"
+output: html_notebook
+---
+
+
+Imagine we are estimating the frequency of the $A$ allele when we have sampled $N=100$ diploid
+individuals from a population.  That is 200 gene copies.
+
+Suppose 73 of those gene copies were $A$ and the remaining 127 were $a$.
+
+Further, assume a uniform prior, (i.e., a $\mathrm{Beta}(1,1)$ prior distribution)
+on the allele frequency.
+
+As we saw earlier, such a setup yields a _posterior distribution_ for the
+allele frequency that is a $\mathrm{Beta}(74, 128)$ distribution.
+
+Various summaries of this posterior (posterior mean, posterior median,
+credible intervals, etc.) are analytically avaiable, but we will practice
+obtaining them (and, further below, more elaborate summaries) using Monte
+Carlo sampling.
+
+A sample from a beta distribution can be obtained from R's `rbeta()` function.
+Thus the following gives a Monte Carlo sample of size $n = 1000$ from a
+$\mathrm{Beta}(74,128)$ distribution:
+```{r}
+S <- rbeta(1000, 74, 128)
+```
+
+# Starting exercises
+
+1. Find the posterior mean of the allele frequency from 5 different Monte Carlo samples of size 1000.
+1. Do the same for 5 different Monte Carlo samples of size 100
+1. Find the posterior median.
+1. Evaluate the posterior probability that the allele frequency is greater than 0.4.  Do this
+for multiple Monte Carlo samples of size 1000 and 100.
+1. For each of the above, identify the $g(x)$---the function of the random variable whose expectation
+is being evaluated.
+1. The quantiles of a Monte Carlo sample from a posterior distribution can provide an estimate of credible intervals.
+Approximate the equal-tail, 90% credible interval for the allele frequency.
+
+# Further exercises
+
+We have the posterior distribution of the frequency of the $A$ allele, but we might be
+more interested in the frequency of $AA$ homozygotes (assumping Hardy-Weinberg equilibrium).
+If a population is in Hardy Weinberg equilibrium with allele $A$ at a frequency of $p$, then
+the expected frequency of $AA$ homozygotes is $p^2$.  
+
+7. Use a Monte Carlo sample of size $n = 100,000$ of the allele frequency to make an approximation (as a
+histogram) of the posterior distribution of the frequency of $AA$ homozygotes.
+
+1. Find the posterior probability that the frequency of $AA$ homozygotes (assuming H-W equilibrium)
+is greater than 0.2.
+
+
+1. From the posterior for the frequency of the $A$ allele, and assuming H-W equilibrium) evaluate
+the posterior probability that a (new and different) sample of 10 individuals from this population will **not** include
+an $AA$ homozygote.
+
+This illustrates one of the convenient aspects of Monte Carlo sampling from a posterior.  If you are
+interested in the posterior distribution of some _function_ of the variable you have the posterior
+for, you can evaluate that directly by sampling the posterior you have in hand.  This is often much
+easier than trying to analytically derive the posterior for your function via methods for finding the
+distribution of transformed random variables.
