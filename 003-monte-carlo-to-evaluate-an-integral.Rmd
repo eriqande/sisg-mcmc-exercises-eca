@@ -13,7 +13,7 @@ library(plotly)
 Consider a somewhat nasty-looking curve in two dimensions.  We
 define $z$ to be a function of $x$ and $y$ that looks like this: 
 $$
-z = f(x, y) = \biggl[1 + e ^{-|x + 2y|} \cos\biggl(0.2 \sqrt{x^2 + y^2}\biggr) \biggr] \times \mathbb{I}\{-10 < x,y < 10 \}
+z = f(x, y) = \biggl[1 + e ^{-|x + 2y|} \cos\biggl(0.2 \sqrt{x^2 + y^2}\biggr) \biggr] \times I\{-10 < x,y < 10 \}
 $$
 In other words, it is a function that returns 0 everywhere outside of a square
 of width 20, centered on the origin.  But within that square it returns

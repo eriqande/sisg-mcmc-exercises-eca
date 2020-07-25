@@ -27,14 +27,24 @@ $$
 
 Given this setup, we can write a function to simulate $R$ different replicates of the Wright-Fisher
 model, starting from an initial allele frequency of $X_0$, and proceeding $T$ generations until $X_T$
-is obtained.  Here is a function that does that, and returns the results for all the replicate simulations
+is obtained.  I have provided such a function that returns the results for all the replicate simulations
 in a tibble with three columns:
 
 - **rep** the number of the replicate run
 - **t** the number of the generation
 - **x** the number of copies of the $A$ allele at generation $t$ in from replicate `rep`.
 
-Here it is:
+If you are not  familiar with a `tibble` it is similar to a data frame, but it forms
+the basis for many operations in the "tidyverse" way of using R, made popular by 
+Hadley Wickham.  The tidyverse provides a unified way of handling many different
+genres of data using ideas that are foundational to relational databases. There should
+be at least a few individuals in each break-out group that are familiar with the tidyverse
+that can help those that are not experienced with it. If you have not run across the
+tidyverse before, then it would be worth reading up on it.  An excellent book
+that covers many aspects of the tidyverse
+is available at [https://r4ds.had.co.nz/](https://r4ds.had.co.nz/).
+
+Here is the function:
 ```{r}
 #' simulate R reps of a Wright-Fisher model of size N haploids for T generations from an initial allele count of X0
 #'
