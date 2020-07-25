@@ -1,0 +1,70 @@
+---
+title: "Biased Random Walk Completed Function"
+output: html_notebook
+---
+
+Recall that we wanted to match `target`:
+```{r}
+# make a totally random target distribution, but set the seed for reproducibility
+set.seed(123)
+target <- floor(runif(20, min = 300, max = 1000))
+names(target) <- 1:20
+
+# I made them integers...
+# have a look at this thing:
+target
+```
+
+And, now, plot it:
+```{r}
+barplot(target)
+```
+
+A completed function to do a biased random walk that will do that is:
+```{r}
+#' @param init starting value.  Must be an integer between left and right inclusive
+#' @param steps the number of steps to take in the random walk
+#' @param target a vector of unnormalized (if desired) probabilities
+#' @param left the left boundary of the walk
+#' @param right the right boundary of the walk
+targeted_rando_walk <-  function(init, steps, target, left = 1, right = 20) {
+  
+  out <- rep(NA, steps + 1)  # to store the output
+  out[1] <- init  # start at the initial state
+  
+  for (i in 2:steps) { 
+    step <- sample(c(-1, 1), 1)  # choose if the step is to the left or right
+    proposed <- out[i - 1] + step
+    
+    if (proposed < left || proposed > right) {
+      out[i] <- out[i - 1]
+    } else if (target[proposed] >= target[out[i - 1]]) {
+      out[i] <- proposed
+    } else if (target[proposed] < target[out[i - 1]]) {
+      if (runif(1) < target[proposed] / target[out[i - 1]]) {
+        out[i] <- proposed
+      } else {
+        out[i] <- out[i - 1]
+      }
+    }
+  }
+  out
+}
+```
+
+We can try that out, letting it run for a million iterations:
+```{r}
+twalk <- targeted_rando_walk(
+  init = 5,
+  steps = 1e6,
+  target = target
+)
+```
+
+Now, plot the result:
+```{r}
+hist(twalk, breaks = 0:21, freq = FALSE)
+```
+
+Holy Macaroni!  That looks right on!
+
