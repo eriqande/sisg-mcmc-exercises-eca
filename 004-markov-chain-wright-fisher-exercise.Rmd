@@ -68,8 +68,8 @@ limiting distribution for this Markov chain? (i.e., so long as you
 run it long enough, the probability
 of being found in any state is unaffected by where you start).
 3. Start at state $X_0=5$ in the chain, but run only a single
-replicate, $R=1$, for $T = 10000$ generations.  But this time, look
-at the distribution of states across the 1,000 time steps
+replicate, $R=1$, for $T = 10,000$ generations.  But this time, look
+at the distribution of states across the 10,000 time steps
 in that single run.  Compare it to the distribution across the $R=1000$
 replicates with $X_0 = 5$ of exercise 1. How do they compare?
 4. Is the Markov chain made by the Wright-Fisher population ergodic?
