@@ -123,6 +123,9 @@ It should look almost identical to `normo_target`
 
 Think about this, if you were to start with a simple random walk, but "tweak" it so
 that it had a limiting distribution that was proportional to `target` what might you do?
+Well, one thought is that you would "nudge" the walk so that it is more likely to
+go step to states with high probability in the target than to states with low
+probability in the target.  
 
 There is one approach that depends only on comparing the height of the current
 state in `target` to the height of where you are proposing to move to.  The recipe goes like this:
@@ -177,10 +180,10 @@ targeted_rando_walk <-  function(init, steps, target, left = 1, right = 20) {
 ```
 
 
-Now, trying running it for a million steps using the unnormalized `target` as the target.
+Now, try running it for a million steps using the unnormalized `target` as the target.
 
-Make a histogram of the result.  It should look just like target. If it doesn't there is
-an error somewhere.  To see a completed function that works see
+Make a histogram of the result.  It should look just like the normalized `target`. If it doesn't there is
+an error somewhere.  To see a completed function that works, go to
 [https://eriqande.github.io/2020-sisg-mcmc-exercises-eca/006-key.nb.html](https://eriqande.github.io/2020-sisg-mcmc-exercises-eca/006-key.nb.html)
 
 A big note: realize that you never actually had to normalize the target distribution in order
