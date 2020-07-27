@@ -63,18 +63,55 @@ for $T = 500$ generations, from each of the possible starting
 points $X_0 = 0,\ldots,10$.  Use Monte Carlo sampling to approximate
 the distribution of states at $T = 500$ for each of the starting
 values.
+```{r}
+mc_sample <- lapply(0:10, function(x0) {
+  WF(
+    R = 1000,
+    N = 10,
+    T = 500,
+    X0 = x0
+  ) %>%
+    mutate(X0 = x0)
+}
+) %>%
+  bind_rows()
+
+mc_sample %>%
+  filter(t == 500) %>%
+  ggplot(aes(x = x)) + 
+  geom_histogram(binwidth = 1) +
+  facet_wrap(~ X0)
+```
+
+
 2. Compare the results you obtained for the different starting
 values in exercise 1.  Does it appear that there is a single, unique
 limiting distribution for this Markov chain? (i.e., so long as you
 run it long enough, the probability
 of being found in any state is unaffected by where you start).
-3. Start at state $X_0=5$ in the chain with $N = 10$, but run only a single
+
+No! Absolutely not!
+
+3. Start at state $X_0=5$ in the chain, but run only a single
 replicate, $R=1$, for $T = 10,000$ generations.  But this time, look
 at the distribution of states across the 10,000 time steps
 in that single run.  Compare it to the distribution across the $R=1000$
 replicates with $X_0 = 5$ of exercise 1. How do they compare?
+```{r}
+sample2 <- WF(R = 1, N = 10, T = 10000, X0 = 5)
+ggplot(sample2, aes(x = x)) + 
+  geom_histogram(binwidth = 1)
+```
+
 4. Is the Markov chain made by the Wright-Fisher population ergodic?
+
+Absolutely not.  The time average doesn't look anything like what you get when
+you run the chain multiple times for a long time.
+
 5. If not, which of the three conditions---recurrence, aperiodicity, or
 irreducibility---is violated?
+
+The chain in not _irreducible_!  If it gets to $x = 0$ or $x = N$ it just
+stays there.  So none of the other states cannot be reached from  $x = 0$ or $x = N$.
 
 
