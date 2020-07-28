@@ -396,7 +396,7 @@ mcmc_cw_mh(ndata = c(30, 10, 10))
 
 ## Exercises
 
-1. Run each of the samplers for 5000 sweeps and discard the first 200 as burn-in.
+1. Run each of the samplers for 5000 sweeps, with `ndata = c(30, 10, 10)`.
 2. Plot the traces for $f$ and $p$ for both the 2-d and the componentwise sampler. Are they visibly different?
 3. Compare the acceptance rates for $p$ and $f$ for both samplers.  
 4. In 3 you should have found that the acceptance rate is higher in the component-wise sampler (as expected).
