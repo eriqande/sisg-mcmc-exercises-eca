@@ -1,5 +1,5 @@
 ---
-title: "2020-sisg-mcmc-exercises-eca"
+title: "sisg-mcmc-exercises-eca"
 output: github_document
 ---
 
@@ -9,5 +9,5 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This repository hosts the Rmd files (and the compiled notebooks in `./docs` for GitHub pages)
 of exercises for the material covered by Eric during the Summer Institute in
-Statistical Genetics Module 15: Markov chain Monte Carlo for Genetics.
+Statistical Genetics Module: Markov chain Monte Carlo for Genetics.
 
