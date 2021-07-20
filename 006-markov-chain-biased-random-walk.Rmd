@@ -1,6 +1,10 @@
 ---
 title: "Making an intentionally biased random walk"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
 ---
 
 
@@ -188,5 +192,5 @@ an error somewhere.  To see a completed function that works, go to
 
 A big note: realize that you never actually had to normalize the target distribution in order
 to use it to create a random walk that let's you sample from it.  This turns out to be a huge feature
-of this approach.  Matthew will tell you all about it tomorrow morning.
+of this approach.  Matthew will tell you about it in the next session.
 
