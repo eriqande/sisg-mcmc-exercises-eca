@@ -67,7 +67,7 @@ of an example.  For many of the other exercises, some skeleton code is given, wi
 
 1. First get a visual approximation of the posterior distribution (as a histogram)
 using a Monte Carlo sample of size 1,000,000.
-```{r, eval=FALSE}
+```{r}
 hist(rbeta(1e6, 31, 71), breaks = 100)
 ```
 
@@ -83,7 +83,7 @@ Note, here that for any vector $x$ of length $n$, `mean(x)` is a convenient way
 of computing $\frac{1}{n}\sum_{i=1}^n x_i$.
 
 3. Do the same for 5 different Monte Carlo samples of size 100
-```{r, eval=FALSE}
+```{r}
 result <- rep(NA, 5)
 for(i in 1:5) {
   result[i] <- mean(rbeta(100, 31, 71))
@@ -102,7 +102,7 @@ is an indicator function.
 
 5. Get a Monte Carlo estimate, using $n = 100,000$, that $q$ is between
 0.2 and 0.4.
-```{r, eval=FALSE}
+```{r}
 S <- rbeta(1e5, 31, 71)
 result <- mean(S > 0.2 & S < 0.4 )
 result
@@ -138,7 +138,7 @@ hist(S^2, breaks = 100)
 
 9. Find the posterior probability that the frequency of `11` homozygotes (assuming H-W equilibrium)
 is greater than 0.15.
-```{r, eval=FALSE}
+```{r}
 S <- rbeta(1e6, 31, 71)
 result <- mean(S^2 > 0.15)
 result
