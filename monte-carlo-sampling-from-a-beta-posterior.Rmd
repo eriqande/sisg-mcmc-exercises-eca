@@ -67,8 +67,8 @@ of an example.  For many of the other exercises, some skeleton code is given, wi
 
 1. First get a visual approximation of the posterior distribution (as a histogram)
 using a Monte Carlo sample of size 1,000,000.
-```{r}
-hist(rbeta(1e6, 31, 71), breaks = 100)
+```{r, eval=FALSE}
+hist(..., breaks = 100)
 ```
 
 2. Find the posterior mean of the allele frequency from 5 different Monte Carlo samples of size 1000.
