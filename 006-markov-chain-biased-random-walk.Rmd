@@ -1,0 +1,196 @@
+---
+title: "Making an intentionally biased random walk"
+output:
+  html_notebook:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+
+# Preamble
+
+One of the more celebrated Markov chains is the simple random walk on the integers:
+from where you are on the number line, with probability 0.5 you take a step of length
+1 to the left, and with probability 0.5 you take a step of length 1 to the right.
+
+Often, this walk is envisioned on the unbounded integers, but for our purposes,
+we will want to restrict it to fewer numbers.  So, we will restrict it to the
+numbers $1,\ldots,20$.  
+
+Now, let us write a function that starts from anywhere within $[1,\ldots,20]$
+and does this random walk for `steps` steps.  Because we have restricted the
+walk, we will have to do something a little fancy: if our random walk tries to
+step beyond 1 or 20, we will just "slap its hand" and tell it to stay where it
+currently is (either 1 or 20) for a step.
+
+Here is a function.  We will write it so that we can change the left and right
+boundaries if we want.
+```{r}
+#' @param init starting value.  Must be an integer between left and right inclusive
+#' @param steps the number of steps to take in the random walk
+#' @param left the left boundary of the walk
+#' @param right the right boundary of the walk
+rando_walk <-  function(init, steps, left = 1, right = 20) {
+  
+  out <- rep(NA, steps + 1)  # to store the output
+  out[1] <- init  # start at the initial state
+  
+  for (i in 2:steps) { 
+    step <- sample(c(-1, 1), 1)  # choose if the step is to the left or right
+    proposed <- out[i - 1] + step
+    
+    if (proposed < left || proposed > right) {
+      out[i] <- out[i - 1]
+    } else {
+      out[i] <- proposed
+    }
+  }
+  out
+}
+```
+
+Study the code.  Note that because we have to do something fancy at the boundary,
+we don't just blindly take a step up (1) or down (-1), but rather we
+see where we would be stepping---in other words where we are _proposing_ to step---and
+then we decide whether or not we should step there.  If we don't step there (because
+it is out of bounds) we just stay where we are and do not take a step at all.
+
+Let's run that random walk for one million iterations and see how much time
+is spent in the different states:
+```{r}
+# do the walk!
+walk1 <- rando_walk(
+  init = 5,
+  steps = 1e6
+)
+
+# tabulate and plot the proportion of time the
+# walk spends in each of the 20 states
+hist(walk1, breaks = 0:21, freq = FALSE)
+```
+
+Cool! That looks pretty close to a uniform distribution, which is what we might
+expect for such a random walk.
+
+# What if we wanted a different limiting distribution?
+
+Suppose now that you wanted to tweak the random walk so that it spent more
+time in some states than in others.  In fact, let's just randomly make a distribution...actually
+we will make something that looks like a distribution, but is not normalized to sum to one. We will
+call this `target`
+```{r}
+# make a totally random target distribution, but set the seed for reproducibility
+set.seed(123)
+target <- floor(runif(20, min = 300, max = 1000))
+names(target) <- 1:20
+
+# I made them integers...
+# have a look at this thing:
+target
+```
+
+And, now, plot it:
+```{r}
+barplot(target)
+```
+
+That is definitely _not_ proportional to a uniform distribution.  
+
+# A normalized distribution
+
+It might be nice to have a normalized distribution (one that sums to one)
+that `target` is proportional to.  
+
+## Exercise 1
+
+Create such a normalized distribution here.  I have some code, leaving "your_code_here" where you need to fill it in
+```{r, error=FALSE}
+normo_target <- "your_code_here" 
+
+# now plot it, (uncomment the following line once you have put your code in)
+# barplot(normo_target)
+```
+
+## Exercise 2
+
+Now that you have determined the normalized target distribution, use `normo_target` to sample the
+integers from 1:20 using regular old Monte Carlo (independent samples) having that
+distribution using the `sample` function.  Sample 1 million of them and plot the result.
+It should look almost identical to `normo_target`
+
+```{r}
+# your code here...
+```
+
+# What about making a random walk that has `normo_target` as its limiting distribution?
+
+Think about this, if you were to start with a simple random walk, but "tweak" it so
+that it had a limiting distribution that was proportional to `target` what might you do?
+Well, one thought is that you would "nudge" the walk so that it is more likely to
+go step to states with high probability in the target than to states with low
+probability in the target.  
+
+There is one approach that depends only on comparing the height of the current
+state in `target` to the height of where you are proposing to move to.  The recipe goes like this:
+
+* From the current state propose going up 1 or down 1.
+* If the proposed state is out of bounds, then reject the proposal
+and stay where you are (`out[i] <- out[i - 1]`)
+* If the proposed state has a _higher_ value in `target` than the current state,
+accept this proposal and move there (i.e. `out[i] <- proposed`).
+* If the proposed state has a _lower_ value in target than the current state,
+then you do not automatically accept it. Rather, you accept it according to 
+the differences between the values of the current and proposed states in `target`.
+Specifically, you accept the proposal with probability equal to
+```
+target(proposed) / target(current)
+```
+For example, draw a uniform random number between 0 and 1, and if that value is
+less than `target(proposed) / target(current)` you accept the proposal, 
+and `out[i] <- proposed`.
+
+That is all there is to it.  
+
+## Exercise 3
+
+Implement the biased random walk described above.  For a skeleton I have 
+put the unbiased random walk in there.  You need to fill in some more details
+```{r}
+#' @param init starting value.  Must be an integer between left and right inclusive
+#' @param steps the number of steps to take in the random walk
+#' @param target a vector of unnormalized (if desired) probabilities
+#' @param left the left boundary of the walk
+#' @param right the right boundary of the walk
+targeted_rando_walk <-  function(init, steps, target, left = 1, right = 20) {
+  
+  out <- rep(NA, steps + 1)  # to store the output
+  out[1] <- init  # start at the initial state
+  
+  for (i in 2:steps) { 
+    step <- sample(c(-1, 1), 1)  # choose if the step is to the left or right
+    proposed <- out[i - 1] + step
+    
+    if (proposed < left || proposed > right) {
+      out[i] <- out[i - 1]
+    } else if (target[proposed] >= target[out[i - 1]]) {
+      # you fill in some code here!
+    } else if (target[proposed] < target[out[i - 1]]) {
+      # you fill in some code here!
+    }
+  }
+  out
+}
+```
+
+
+Now, try running it for a million steps using the unnormalized `target` as the target.
+
+Make a histogram of the result.  It should look just like the normalized `target`. If it doesn't there is
+an error somewhere.  To see a completed function that works, go to
+[https://eriqande.github.io/2020-sisg-mcmc-exercises-eca/006-key.nb.html](https://eriqande.github.io/2020-sisg-mcmc-exercises-eca/006-key.nb.html)
+
+A big note: realize that you never actually had to normalize the target distribution in order
+to use it to create a random walk that let's you sample from it.  This turns out to be a huge feature
+of this approach.  Matthew will tell you about it in the next session.
+
