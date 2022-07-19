@@ -1,0 +1,143 @@
+---
+title: "Simple Genetic Mixture Extensions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this document I suggest two extensions of the inference problem for genetic mixtures.
+The first is to allow the mixture proportions, `w`, to be estimated rather than fixed.
+The second is to allow that the allele frequencies in different populations tend to be similar to one another (``correlated allele frequencies"). 
+
+
+## The model
+
+We begin by writing out the model more formally.
+We have genotypes $x$, allele frequencies $P$, and assignment labels $z$.
+The joint distribution is:
+$$p(x, P, z) = p(P,z) p(x|P,z)$$ 
+We assumed the prior distributions on $P$ and $z$ are independent, so:
+$$p(x,P,z) = p(P) p(z) p(x | P,z).$$
+
+In these expressions I kept things simple by not including the mixture proportions $w=(0.5,0.5)$  and the allele frequency prior parameters $a=(1,1)$, because they 
+were both treated as fixed and known. Since we are going to change this I will put those in explicitly now:
+
+$$p(x, P, z | w, a) = p(P| a) p(z | w) p(x|P,z)$$  
+Each term in this expression can be written out in more detail.
+
+For example, we assumed independent beta priors on the elements of $P$ so:
+$$p(P | a) = \prod_k \prod_r p(P_{kr} | a) \propto \prod_k \prod_r P_{kr}^{a_1-1} (1-P_{kr})^{a_2-1}$$
+The $z$ were sampled independently according to $w=(w_1,w_2)$:
+$$p(z | w) = \prod_i p(z_i | w) = \prod_i w_1^{I(z_i==1)} (1-w_1)^{I(z_i==2)}$$
+And the genotypes for individual $i$ were then drawn from the allele frequencies of the relevant subpopulation $z_i$.
+$$p(x | P,z) = \prod_i \prod_r P_{z_i r}^{x_i} (1-P_{z_i r})^{1-x_i}$$
+
+## Estimate `w`
+
+Now suppose we want to add the facility to estimate $w$ rather than treat it as fixed.
+We can proceed to specify a prior distribution for $w$ and do Bayesian inference.
+
+The model becomes:
+$$p(x, P, z, w | a) = p(P| a) p(z | w) p(w) p(x|P,z)$$  
+
+Note that the full conditional for $w$ is then given by:
+$$p(w | x, P, z, a) \propto p(x,P,z,w|a) \propto p(z|w) p(w).$$
+That is, it is obtained by taking full joint distribution of everything in our model, and ignoring the terms that do not depend on $w$. (This is generally true for the full conditional distributions: to find the full conditional of a parameter, write down the joint distribution and ignore terms that do not depend on the parameter.)
+
+
+The sampling of $z|w$ is effectively binomial, and indeed:
+$$p(z|w) \propto w_1^{n_1}(1-w_1)^{n_2}$$
+where 
+$$n_1 := \#\{z_i: z_i==1\}$$ and
+$$n_2 := \#\{z_i: z_i==2\}$$.
+
+So if we use a beta prior for $w$, say
+$$w \sim Beta(b_1, b_2)$$
+then the full conditional for $w$ will also be a beta distribution.
+Can you write down the parameters of this posterior?
+
+Thus we can sample from the full conditional for $w$. This means we can
+include it in our MCMC scheme using a Gibbs step. The extended Gibbs algorithm, in outline, 
+will look like this:
+
+Iterate:
+
+1. sample `P` from `P` | `z`, `w`, `x`
+2. sample `z` from `z` | `P`, `w`, `x`
+3. sample `w` from `w` | `P`, `z`, `x`
+
+(Note that step 1 does not actually depend on `w`, and step  3 does not actually depend on `x`).
+
+
+## Correlated allele frequencies
+
+Now for a more challenging extension.
+In the above we assumed priors the allele frequences in the two populations
+are independent. But in practice, when you look at two populations, it is often
+the case that the allele frequencies will be somewhat similar.
+
+Here we can introduce this by changing the prior on `P`. We will still assume
+beta priors, but we will let the mean of this beta prior change from locus to locus, and use the same mean for both populations. This will induce a correlation between the allele frequency for population 1 and for population 2.
+
+Specifically I will begin by allowing the parameters of the Beta prior to change from locus to locus: 
+$$P_{kr} \sim Be(a_{1r},a_{2r})$$
+One problem here is that $a_{1r}$ and $a_{2r}$ are a bit difficult to interpret - and
+their interpretation kind of depends on one another. Also, I now have
+a lot of parameters... 
+
+To solve these problems I will reparameterize the Beta distribution in terms of its mean $m_r := a_{1r}/(a_{1r}+a_{2r})$ and the sum $N_r := a_{1r} + a_{2r}$ which determines the variance, and I will reduce the number of parameters by assuming $N_r$ is the same for all loci, $N_r=N$. 
+
+
+So we can write
+$$P_{kr} | m_r, N \sim Be(m_r N, (1-m_r)N)$$
+Now I will put a prior on $m_r$. Since $m_r$ is a number between 0 and 1 I will use a uniform prior. 
+
+The value of $N$ determines the strength of the correlation between populations: if $N$ is big, then $P_{kr}$ will be very close to $m_r$ for both $k$. For simplicity I will just fix $N=10$ for now, which will give a modest correlation. As a further extension you could imagine also putting a prior on $N$ and estimating $N$ from the data.
+
+
+```{r}
+set.seed(1001)
+R = 100
+m = runif(R)
+N = 10
+P1 = rbeta(R, m*N, (1-m)*N)
+P2 = rbeta(R, m*N, (1-m)*N)
+plot(P1,P2,main="illustration of correlated allele frequencies")
+```
+
+So to summarize the model we have:
+$$p(x, P, z, w, m | N) = p(m) p(P| m, N) p(z | w) p(w) p(x|P,z)$$  
+Given $m,N$ the prior on $P_{kl}$ is still Beta, and so the full conditional of $P$ is still Beta (now with different prior parameters for each locus, but this does not 
+complicate things too much).
+
+Also the full conditionals for $z$ and $w$ have not changed, so we can keep the Gibbs updates for those....
+
+So we are just left with $m$. However, the full conditional on $m$ is not tractable.
+It does not have a nice form and we cannot sample from it. The solution is to
+use a MH update for $m$, and mix it in with the Gibbs sampling updates!
+Remember that there is a separate $m$ parameter for each locus, which is a lot of parameters if there are a lot of loci. Also the loci are independent. So it makes
+sense to update each $m_r$ parameter separately using component-wise MH, rather than jointly. The update function might look something like this:
+
+```{r, eval=FALSE}
+update_m_MH = function(P,N){
+  R = ncol(P)
+  for(r in 1:R){
+    proposed_m = m[r] + rnorm(1,0,0.1)
+    A = ...
+    if(runif(1)<A)
+      m[r] = proposed_m
+  }
+  return(m)
+}
+```
+
+
+
+
+
+
+

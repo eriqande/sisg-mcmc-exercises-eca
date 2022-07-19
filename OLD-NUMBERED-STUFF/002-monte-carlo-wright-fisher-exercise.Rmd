@@ -1,0 +1,155 @@
+---
+title: "Approximating Quantities and Probabilities from The Wright-Fisher Model"
+output: html_notebook
+---
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+# Introduction
+
+The Wright-Fisher model provides a way of modelling the random inheritance of
+genes from one generation to the next.  In its simplest incarnation, the population size
+is constant each generation: $N$ haploid individuals.  Each individual can thus be
+represented by a single gene copy.  The gene copies in generation $t+1$ are obtained
+by sampling _with replacement_ from amongst the gene copies in generation $t$.
+
+Let us assume we are concerned with a single locus at which there are two different
+alleles, $A$ and $a$.  And we let the random variable $X_t$ record the number of
+$A$ alleles (out of $N$) in the population at generation $t$.  Initially (at $t=0$)
+there are $x_0$ copies of the $A$ allele. Under the Wright-Fisher model's
+sampling with replacement from the previous generation, we have a binomial distribution with
+$N$ draws, each with a success probability $p$ of $x_t/N$
+$$
+X_{t+1}  \sim \mathrm{Binomial}(N; x_t/N)~~~~,~~~~t = 1, 2, \ldots
+$$
+
+Given this setup, we can write a function to simulate $R$ different replicates of the Wright-Fisher
+model, starting from an initial allele frequency of $X_0$, and proceeding $T$ generations until $X_T$
+is obtained.  I have provided such a function that returns the results for all the replicate simulations
+in a tibble with three columns:
+
+- **rep** the number of the replicate run
+- **t** the number of the generation
+- **x** the number of copies of the $A$ allele at generation $t$ in from replicate `rep`.
+
+If you are not  familiar with a `tibble` it is similar to a data frame, but it forms
+the basis for many operations in the "tidyverse" way of using R, made popular by 
+Hadley Wickham.  The tidyverse provides a unified way of handling many different
+genres of data using ideas that are foundational to relational databases. There should
+be at least a few individuals in each break-out group that are familiar with the tidyverse
+that can help those that are not experienced with it. If you have not run across the
+tidyverse before, then it would be worth reading up on it.  An excellent book
+that covers many aspects of the tidyverse
+is available at [https://r4ds.had.co.nz/](https://r4ds.had.co.nz/).
+
+Here is the function:
+```{r}
+#' simulate R reps of a Wright-Fisher model of size N haploids for T generations from an initial allele count of X0
+#'
+#' Default values for the simulatiions are given as shown.
+#'
+#' @param R number of replicate simulations to do
+#' @param N number of haploids, each generation, in the population
+#' @param T number of generations of sampling to simulate
+#' @param X0 the initial number of A alleles.  Must be <= N
+WF <- function(
+  R = 1000,
+  N = 100,
+  T = 20,
+  X0 = 30
+) {
+  stopifnot(X0 <= N)
+  
+  lapply(1:R, function(r) { # cycling over the different replicates
+    # initialize a vector to store the results
+    x <- rep(NA, T)
+    
+    # get X1
+    x[1] <- rbinom(n = 1, size = N, prob = X0 / N)
+    
+    # cycle over the remaining generations (for loop is slow but makes
+    # it easier to read what is going on)
+    for (t in 2:T) {
+      x[t] <- rbinom(n = 1, size = N, prob = x[t - 1] / N)
+    }
+    
+    # return a tibble of results
+    tibble(
+      rep = r,
+      t = 1:T,
+      x = x
+    )
+  }) %>%
+    bind_rows()   # at the end, bind them all into a single tibble
+}
+```
+
+It is not super fast, but it works well enough. It also returns every $X_t$ for every replicate
+run of the Wright-Fisher model. So we can estimate a variety of quantities with the output, using
+Monte Carlo.
+
+## Examples
+
+To recreate the histogram of $x_{10}$ values in the lecture you can do:
+```{r}
+set.seed(5)
+ex1 <- WF(
+  R = 1e4,
+  N = 100,
+  T = 12,
+  X0 = 30
+  )
+
+# then count up the different x_10 values
+counts10 <- ex1 %>%
+  filter(t == 10) %>%
+  count(x) %>%
+  mutate(prob = n / sum(n))
+
+# and, plot it
+g <- ggplot(counts10, aes(x = x, y = prob)) + 
+  geom_col(fill = "white", colour = "black", size = 0.3) +
+  theme_bw()
+
+g
+```
+
+Or to look at the allele frequencies over each generation from 1 to 12, we could do:
+```{r}
+counts_all <- ex1 %>%
+  count(t, x)
+
+# and, plot it
+ggplot(counts_all, aes(x = x, y = n)) + 
+  geom_col(fill = "white", colour = "black", size = 0.3) +
+  theme_bw() +
+  facet_wrap(~ t, ncol = 3)
+```
+
+## Exercises
+
+Now that you know how to simulate from the Wright-Fisher model using the `WF()` function,
+here are three exercises:
+
+1. Use Monte Carlo to approximate the mean number of $A$ alleles at generations 1 through 20,
+for a haploid population of size $N = 100$, starting with 30 $A$ alleles.
+For each one, use 1000 replicates.
+1. As you should have verified through simulation above, the expected allele frequency
+remains unchanged, over time, in a Wright-Fisher model.  However, the expected heterozygosity
+decreases.  That is, the probability that two gene copies, sampled at random from the population
+are different alleles, decreases over time, on average.  At time $t$ in a replicate, the
+probability of drawing two gene copies of different alleles is, in our case, equal to
+$$
+H = 2\frac{X_t}{N}\frac{N-X_t}{N-1}
+$$
+Use the results from the simulated W-F population in exercise #1 to approximate the
+heterozygosity at generations 1--20.
+1. Simulate 1,000 replicates of a haploid population of size 100 for 1,000 generations,
+with $X_0 = 30$, and, from the output, approximate (via histogram) the distribution of time until fixation
+(i.e., the first generation $t$, at which $X_t = 0$ or $X_t = 100$.)
+
+When doing MCMC you might often work like this: a large number of variable states get
+written to disk or stored in a variable, and then after the fact you can use them in
+Monte Carlo.
