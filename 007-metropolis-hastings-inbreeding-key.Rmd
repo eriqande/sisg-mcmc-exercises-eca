@@ -1,5 +1,5 @@
 ---
-title: "MCMC Sampling for a Simple Inbreeding Model"
+title: "MCMC Sampling for a Simple Inbreeding Model -- KEY"
 description: We review our simple model for inbreeding at a locus and develop the code to perform several different types of Metropolis-Hastings updates, then augment the model to include latent variables that let us easily to Gibbs-sampling updates.
 output: 
   html_notebook:
