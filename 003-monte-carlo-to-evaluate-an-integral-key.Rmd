@@ -1,5 +1,5 @@
 ---
-title: "Bonus excercise: use Monte Carlo to approximate a definite integral"
+title: "Bonus excercise: use Monte Carlo to approximate a definite integral -- KEY"
 output: html_notebook
 ---
 
